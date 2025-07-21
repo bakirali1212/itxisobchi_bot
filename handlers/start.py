@@ -17,6 +17,10 @@ UNKNOWN_WORKER = "Noma'lum"
 @router.message(F.text == "/start")
 @router.message(F.text == "🏠 Bosh sahifa")
 async def start_handler(msg: types.Message):
+    # Barcha kutish holatlarini tozalaymiz
+    if msg.from_user.id in waiting_for_worker_id:
+        waiting_for_worker_id.remove(msg.from_user.id)
+
     # Foydalanuvchi ishchilar ro'yxatida bo'lsa, ma'lumotlarini saqlaymiz/yangilaymiz
     if database.is_worker(msg.from_user.id):
         full_name = msg.from_user.full_name or (msg.from_user.username or UNKNOWN_WORKER)
@@ -87,6 +91,10 @@ def format_workers_list():
 
 @router.message(F.text == "👥 Ishchilar ro'yxati")
 async def show_workers(msg: types.Message):
+    # Oldingi holatlarni tozalaymiz
+    if msg.from_user.id in waiting_for_worker_id:
+        waiting_for_worker_id.remove(msg.from_user.id)
+
     if msg.from_user.id not in config.ADMIN_ID:
         await msg.answer("❌ Sizga bu amalni bajarishga ruxsat yo'q.", reply_markup=main_menu_btn)
         return
