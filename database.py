@@ -35,6 +35,16 @@ CREATE TABLE IF NOT EXISTS workers (
     full_name TEXT
 )
 """)
+
+# Foydalanuvchilar jadvali (start bosganda saqlanadi)
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    user_id INTEGER PRIMARY KEY,
+    full_name TEXT,
+    username TEXT,
+    last_seen TEXT
+)
+""")
 conn.commit()
 
 
@@ -91,3 +101,27 @@ def get_workers():
 def is_worker(user_id):
     cursor.execute("SELECT 1 FROM workers WHERE user_id = ?", (user_id,))
     return cursor.fetchone() is not None
+
+# Ishchi ismini yangilash
+def update_worker_name(user_id, full_name):
+    cursor.execute("UPDATE workers SET full_name = ? WHERE user_id = ?", (full_name, user_id))
+    conn.commit()
+
+# Start bosganda foydalanuvchini saqlash
+def save_user(user_id, full_name, username):
+    now = datetime.now().isoformat()
+    cursor.execute("""
+        INSERT OR REPLACE INTO users (user_id, full_name, username, last_seen)
+        VALUES (?, ?, ?, ?)
+    """, (user_id, full_name, username, now))
+    conn.commit()
+
+# Foydalanuvchi start bosganmi?
+def is_user_exists(user_id):
+    cursor.execute("SELECT 1 FROM users WHERE user_id = ?", (user_id,))
+    return cursor.fetchone() is not None
+
+# Foydalanuvchi ma'lumotlarini olish
+def get_user(user_id):
+    cursor.execute("SELECT full_name, username FROM users WHERE user_id = ?", (user_id,))
+    return cursor.fetchone()

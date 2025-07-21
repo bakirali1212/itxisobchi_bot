@@ -1,16 +1,20 @@
 from aiogram import types, Router, F
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 import database
 import config
+from handlers.start import main_menu_btn
 
 router = Router()
 waiting_task = {}
+
+# Orqaga tugmasi
+back_btn = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="⬅️ Orqaga")]], resize_keyboard=True)
 
 @router.message(F.text == "📁 Loyihalar")
 async def show_projects(msg: types.Message):
     projects = database.get_projects()
     if not projects:
-        await msg.answer("Hozircha hech qanday loyiha yo‘q.")
+        await msg.answer("Hozircha hech qanday loyiha yo‘q.", reply_markup=back_btn)
         return
 
     buttons = []
@@ -21,12 +25,20 @@ async def show_projects(msg: types.Message):
             row.append(InlineKeyboardButton(text="❌ O‘chirish", callback_data=f"deleteproj_{pid}"))
         buttons.append(row)
     await msg.answer("Loyihani tanlang:", reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+    await msg.answer("⬅️ Orqaga qaytish uchun tugmani bosing", reply_markup=back_btn)
+
+@router.message(F.text == "⬅️ Orqaga")
+async def back_to_main(msg: types.Message):
+    # waiting_task ni tozalash
+    waiting_task.pop(msg.from_user.id, None)
+    from handlers.start import start_handler
+    await start_handler(msg)
 
 @router.callback_query(F.data.startswith("project_"))
 async def select_project(callback: types.CallbackQuery):
     pid = int(callback.data.split("_")[1])
     waiting_task[callback.from_user.id] = pid
-    await callback.message.answer("Ushbu loyiha uchun nima ish qildingiz?")
+    await callback.message.answer("Ushbu loyiha uchun nima ish qildingiz?", reply_markup=back_btn)
     await callback.answer()
 
 @router.message(lambda msg: msg.from_user.id in waiting_task)
@@ -35,7 +47,7 @@ async def save_task(msg: types.Message):
 
     # 🔸 Bazaga saqlaymiz
     database.add_task(pid, msg.from_user.id, msg.from_user.full_name, msg.text)
-    await msg.answer("✅ Ish muvaffaqiyatli saqlandi.")
+    await msg.answer("✅ Ish muvaffaqiyatli saqlandi.", reply_markup=back_btn)
 
     # 🔹 Guruhga yuboramiz
     text = (
@@ -71,11 +83,11 @@ async def delete_project_handler(callback: types.CallbackQuery):
         return
     pid = int(callback.data.split("_")[1])
     database.delete_project(pid)
-    await callback.message.answer("✅ Loyiha va unga tegishli ishlar o‘chirildi.")
+    await callback.message.answer("✅ Loyiha va unga tegishli ishlar o‘chirildi.", reply_markup=back_btn)
     # Loyihalar ro‘yxatini yangilash
     projects = database.get_projects()
     if not projects:
-        await callback.message.answer("Hozircha hech qanday loyiha yo‘q.")
+        await callback.message.answer("Hozircha hech qanday loyiha yo‘q.", reply_markup=back_btn)
         return
     buttons = []
     for pid, name in projects:
@@ -84,10 +96,11 @@ async def delete_project_handler(callback: types.CallbackQuery):
             row.append(InlineKeyboardButton(text="❌ O‘chirish", callback_data=f"deleteproj_{pid}"))
         buttons.append(row)
     await callback.message.answer("Loyihani tanlang:", reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+    await callback.message.answer("⬅️ Orqaga qaytish uchun tugmani bosing", reply_markup=back_btn)
     await callback.answer()
 
 # Bekor qilish tugmasi
 @router.callback_query(F.data == "cancel_del")
 async def cancel_delete(callback: types.CallbackQuery):
-    await callback.message.answer("❌ O‘chirish bekor qilindi.")
+    await callback.message.answer("❌ O‘chirish bekor qilindi.", reply_markup=back_btn)
     await callback.answer()
