@@ -2,6 +2,7 @@ from aiogram import Router, types, F
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 import config
 import database
+import html
 
 router = Router()
 
@@ -87,7 +88,10 @@ def format_workers_list():
     workers = database.get_workers()
     if not workers:
         return "Ishchilar ro'yxati bo'sh."
-    return '\n'.join([f"<b>{w[1] if w[1] else UNKNOWN_WORKER}</b> (<code>{w[0]}</code>)" for w in workers])
+    return '\n'.join([
+        f"<b>{html.escape(w[1]) if w[1] else UNKNOWN_WORKER}</b> (<code>{w[0]}</code>)"
+        for w in workers
+    ])
 
 @router.message(F.text == "👥 Ishchilar ro'yxati")
 async def show_workers(msg: types.Message):
