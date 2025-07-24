@@ -12,7 +12,7 @@ back_btn = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="⬅️ Orqaga")]]
 # Bu user loyiha nomini kiritishini kutyaptimi – shuni kuzatamiz
 waiting_for_project_name = set()
 
-@router.message(F.text == "➕ Loyiha qo‘shish")
+@router.message(F.text == "➕ Loyiha qo'shish")
 async def ask_project_name(msg: types.Message):
     # Faqat admin kirita oladi
     if msg.from_user.id not in config.ADMIN_ID:
