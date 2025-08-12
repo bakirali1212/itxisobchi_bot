@@ -7,6 +7,31 @@ from datetime import datetime
 conn = sqlite3.connect("project_bot.db")
 cursor = conn.cursor()
 
+
+# talab va taklif jadvali
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS feedback (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    full_name TEXT,
+    message TEXT
+)
+""")
+conn.commit()
+
+
+def save_feedback(user_id, full_name, message):
+    cursor.execute(
+        "INSERT INTO feedback (user_id, full_name, message) VALUES (?, ?, ?)",
+        (user_id, full_name, message)
+    )
+    conn.commit()
+
+
+def get_all_feedback():
+    cursor.execute("SELECT full_name, message FROM feedback")
+    return cursor.fetchall()
+
 # Loyihalar jadvali
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS projects (
@@ -49,6 +74,13 @@ conn.commit()
 
 
 # === CRUD funksiyalar === #
+
+# Loyiha nomini olish
+def get_project_name(project_id):
+    cursor.execute("SELECT name FROM projects WHERE id = ?", (project_id,))
+    row = cursor.fetchone()
+    return row[0] if row else None
+
 
 # Loyiha qo‘shish
 def add_project(name):

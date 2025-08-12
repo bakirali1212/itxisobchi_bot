@@ -28,7 +28,7 @@ async def back_to_main(msg: types.Message):
     from handlers.start import start_handler
     await start_handler(msg)
 
-@router.message(lambda msg: msg.from_user.id in waiting_for_project_name)
+@router.message(lambda msg: msg.from_user.id in waiting_for_project_name and msg.text not in ["⬅️ Orqaga","📌 Talab va Taklif", "📋 Talab va Takliflarni ko'rish", "➕ Loyiha qo'shish"])
 async def save_project_name(msg: types.Message):
     project_name = msg.text.strip()
 

@@ -1,6 +1,6 @@
 from aiogram import Bot, Dispatcher
 from config import BOT_TOKEN
-from handlers import start, projects, tasks, add_project
+from handlers import start, projects, tasks, add_project, feedback
 
 import asyncio
 
@@ -11,7 +11,8 @@ dp.include_routers(
     start.router,
     projects.router,
     tasks.router,
-    add_project.router
+    add_project.router,
+    feedback.router
 )
 
 async def main():

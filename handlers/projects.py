@@ -50,13 +50,16 @@ async def save_task(msg: types.Message):
     await msg.answer("✅ Ish muvaffaqiyatli saqlandi.", reply_markup=back_btn)
 
     # 🔹 Guruhga yuboramiz
+    project_name = database.get_project_name(pid)
+
     text = (
         f"📢 *Yangi bajarilgan ish!*\n\n"
         f"👤 Foydalanuvchi: [{msg.from_user.full_name}](tg://user?id={msg.from_user.id})\n"
-        f"📂 Loyiha ID: {pid}\n"
+        f"📂 Loyiha: {project_name}\n"
         f"📌 Ish: {msg.text}"
     )
     await msg.bot.send_message(config.GROUP_ID, text, parse_mode="Markdown")
+
 
 # Loyihani o‘chirish tugmasi uchun callback
 @router.callback_query(F.data.startswith("deleteproj_"))

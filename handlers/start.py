@@ -38,11 +38,12 @@ async def start_handler(msg: types.Message):
 
     buttons = [
         [KeyboardButton(text="📁 Loyihalar")],
-        
+        [KeyboardButton(text="📌 Talab va Taklif")],
     ]
 
     # ✅ Admin ID ni config.py dan tekshiramiz
     if msg.from_user.id in config.ADMIN_ID:
+        buttons.append([KeyboardButton(text="📋 Talab va Takliflarni ko'rish")])
         buttons.append([KeyboardButton(text="➕ Loyiha qo'shish")])
         buttons.append([KeyboardButton(text="🛠 Qilingan ishlar")])
         buttons.append([KeyboardButton(text="👷‍♂️ Ishchilar qo'shish")])
