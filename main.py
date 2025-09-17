@@ -4,6 +4,23 @@ from handlers import start, projects, tasks, add_project, feedback
 
 import asyncio
 
+from aiogram import Router, F
+from aiogram.types import Message
+
+router = Router()
+
+# faqat private chatlarda ishlaydi
+@router.message(F.chat.type == "private")
+async def private_handler(message: Message):
+    await message.answer("Salom! Bu bot faqat shaxsiy chatda ishlaydi.")
+
+# group yoki supergroupdan kelgan xabarlarni butunlay e'tiborsiz qoldirish
+@router.message(F.chat.type.in_(["group", "supergroup"]))
+async def ignore_groups(message: Message):
+    pass  # hech narsa qilmaydi, javob ham qaytarmaydi
+
+
+
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 

@@ -1,28 +1,28 @@
 from aiogram import Router, types, F
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 import config
 import database
 import html
 
 router = Router()
 
-# Ishchi qo'shish jarayonini kuzatamiz
 waiting_for_worker_id = set()
 
-# Universal bosh sahifa tugmasi
 main_menu_btn = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="🏠 Bosh sahifa")]], resize_keyboard=True)
-
-# "Noma'lum" so'zini global o'zgaruvchi sifatida saqlash
 UNKNOWN_WORKER = "Noma'lum"
 
 @router.message(F.text == "/start")
 @router.message(F.text == "🏠 Bosh sahifa")
 async def start_handler(msg: types.Message):
-    # Barcha kutish holatlarini tozalaymiz
+    # 🔒 Guruhda ishlashni cheklaymiz (umuman javob bermaydi)
+    if msg.chat.type != "private":
+        return
+
+    # Kutish holatini tozalaymiz
     if msg.from_user.id in waiting_for_worker_id:
         waiting_for_worker_id.remove(msg.from_user.id)
 
-    # Foydalanuvchi ishchilar ro'yxatida bo'lsa, ma'lumotlarini saqlaymiz/yangilaymiz
+    # Foydalanuvchini bazada yangilash
     if database.is_worker(msg.from_user.id):
         full_name = msg.from_user.full_name or (msg.from_user.username or UNKNOWN_WORKER)
         database.save_user(msg.from_user.id, full_name, msg.from_user.username)
@@ -30,18 +30,17 @@ async def start_handler(msg: types.Message):
         for w in workers:
             if w[0] == msg.from_user.id and (not w[1] or w[1] == UNKNOWN_WORKER):
                 database.update_worker_name(msg.from_user.id, full_name)
-    
-    # Faqat admin yoki ishchi ro'yxatda bo'lsa, botdan foydalanish mumkin
+
+    # Foydalanuvchi ro‘yxatda bo‘lmasa
     if msg.from_user.id not in config.ADMIN_ID and not database.is_worker(msg.from_user.id):
         await msg.answer("❌ Uzr, siz ro'yxatda yo'qsiz. Botdan faqat ishchilar va adminlar foydalanishi mumkin.", reply_markup=main_menu_btn)
         return
 
+    # Tugmalar
     buttons = [
         [KeyboardButton(text="📁 Loyihalar")],
         [KeyboardButton(text="📌 Talab va Taklif")],
     ]
-
-    # ✅ Admin ID ni config.py dan tekshiramiz
     if msg.from_user.id in config.ADMIN_ID:
         buttons.append([KeyboardButton(text="📋 Talab va Takliflarni ko'rish")])
         buttons.append([KeyboardButton(text="➕ Loyiha qo'shish")])
@@ -52,21 +51,27 @@ async def start_handler(msg: types.Message):
     markup = ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
     await msg.answer("Assalomu alaykum! Kerakli bo'limni tanlang:", reply_markup=markup)
 
-# /start tugmasi har doim ishlasin
+
 @router.message(F.text == "/start")
 async def always_start(msg: types.Message):
     await start_handler(msg)
 
+
 @router.message(F.text == "👷‍♂️ Ishchilar qo'shish")
 async def ask_worker_id(msg: types.Message):
+    if msg.chat.type != "private":
+        return
     if msg.from_user.id not in config.ADMIN_ID:
         await msg.answer("❌ Sizga bu amalni bajarishga ruxsat yo'q.", reply_markup=main_menu_btn)
         return
     waiting_for_worker_id.add(msg.from_user.id)
     await msg.answer("🆔 Ishchi Telegram ID raqamini yoki reply orqali foydalanuvchini yuboring:", reply_markup=main_menu_btn)
 
+
 @router.message(lambda msg: msg.from_user.id in waiting_for_worker_id)
 async def save_worker(msg: types.Message):
+    if msg.chat.type != "private":
+        return
     if msg.reply_to_message:
         user = msg.reply_to_message.from_user
         user_id = user.id
@@ -77,7 +82,6 @@ async def save_worker(msg: types.Message):
     else:
         try:
             user_id = int(msg.text.strip())
-            # Foydalanuvchi /start bosmagan bo'lsa ham qo'shamiz
             database.add_worker(user_id, UNKNOWN_WORKER)
             waiting_for_worker_id.remove(msg.from_user.id)
             await msg.answer(f"✅ Ishchi ID (<code>{user_id}</code>) ro'yxatga qo'shildi. Foydalanuvchi /start bosganda ismi avtomatik yangilanadi.", parse_mode="HTML", reply_markup=main_menu_btn)
@@ -85,7 +89,7 @@ async def save_worker(msg: types.Message):
             await msg.answer("❗ To'g'ri Telegram ID yuboring yoki reply qiling.", reply_markup=main_menu_btn)
             return
 
-# Admin uchun ishchilar ro'yxatini ko'rsatish
+
 def format_workers_list():
     workers = database.get_workers()
     if not workers:
@@ -95,9 +99,11 @@ def format_workers_list():
         for w in workers
     ])
 
+
 @router.message(F.text == "👥 Ishchilar ro'yxati")
 async def show_workers(msg: types.Message):
-    # Oldingi holatlarni tozalaymiz
+    if msg.chat.type != "private":
+        return
     if msg.from_user.id in waiting_for_worker_id:
         waiting_for_worker_id.remove(msg.from_user.id)
 

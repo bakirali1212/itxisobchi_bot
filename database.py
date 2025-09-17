@@ -82,9 +82,13 @@ def get_project_name(project_id):
     return row[0] if row else None
 
 
-# Loyiha qo‘shish
 def add_project(name):
     cursor.execute("INSERT INTO projects (name) VALUES (?)", (name,))
+    conn.commit()
+
+def delete_project(project_id):
+    cursor.execute("DELETE FROM tasks WHERE project_id = ?", (project_id,))
+    cursor.execute("DELETE FROM projects WHERE id = ?", (project_id,))
     conn.commit()
 
 # Barcha loyihalar
