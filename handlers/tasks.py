@@ -51,7 +51,7 @@ async def show_tasks(callback: types.CallbackQuery):
         ])
 
         # Telegram xabarining maksimal uzunligi
-        MAX_LEN = 4096
+        MAX_LEN = 2000
         # Matnni bo‘lib yuborish
         for i in range(0, len(text), MAX_LEN):
             await callback.message.answer(
