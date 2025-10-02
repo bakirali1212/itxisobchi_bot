@@ -3,6 +3,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeybo
 import database
 import config
 from handlers.start import main_menu_btn
+import html
 
 router = Router()
 waiting_task = {}
@@ -49,16 +50,23 @@ async def save_task(msg: types.Message):
     database.add_task(pid, msg.from_user.id, msg.from_user.full_name, msg.text)
     await msg.answer("✅ Ish muvaffaqiyatli saqlandi.", reply_markup=back_btn)
 
-    # 🔹 Guruhga yuboramiz
+    # 🔹 Guruhga yuboramiz (HTML parse_mode)
     project_name = database.get_project_name(pid)
 
     text = (
-        f"📢 *Yangi bajarilgan ish!*\n\n"
-        f"👤 Foydalanuvchi: [{msg.from_user.full_name}](tg://user?id={msg.from_user.id})\n"
-        f"📂 Loyiha: {project_name}\n"
-        f"📌 Ish: {msg.text}"
+        "📢 <b>Yangi bajarilgan ish!</b>\n\n"
+        f"👤 Foydalanuvchi: "
+        f"<a href='tg://user?id={msg.from_user.id}'>{html.escape(msg.from_user.full_name)}</a>\n"
+        f"📂 Loyiha: {html.escape(str(project_name))}\n"
+        f"📌 Ish: {html.escape(msg.text)}"
     )
-    await msg.bot.send_message(config.GROUP_ID, text, parse_mode="Markdown")
+
+    await msg.bot.send_message(
+        chat_id=config.GROUP_ID,
+        text=text,
+        parse_mode="HTML",
+        disable_web_page_preview=True
+    )
 
 
 # Loyihani o‘chirish tugmasi uchun callback
